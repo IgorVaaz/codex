@@ -1,0 +1,10 @@
+[
+ {"id":"ghini-graos-500","brand":"Ghini","name":"Café Especial","format":"Em grãos","grams":500,"suggested_price":64.90},
+ {"id":"ghini-moido-250","brand":"Ghini","name":"Café Especial","format":"Moído","grams":250,"suggested_price":32.90},
+ {"id":"alvorada-tradicional-500","brand":"Alvorada","name":"Tradicional","format":"Torrado e moído","grams":500,"suggested_price":26.90},
+ {"id":"alvorada-extra-forte-500","brand":"Alvorada","name":"Extra Forte","format":"Torrado e moído","grams":500,"suggested_price":26.90},
+ {"id":"alvorada-superior-500","brand":"Alvorada","name":"Superior","format":"100% arábica, torrado e moído","grams":500,"suggested_price":49.90},
+ {"id":"alvorada-gourmet-1000","brand":"Alvorada","name":"Gourmet Espresso","format":"Em grãos","grams":1000,"suggested_price":119.90},
+ {"id":"ituano-superior-1000","brand":"Ituano","name":"Espresso Superior","format":"Em grãos","grams":1000,"suggested_price":104.90},
+ {"id":"ituano-gourmet-1000","brand":"Ituano","name":"Espresso Gourmet","format":"100% arábica, em grãos","grams":1000,"suggested_price":109.90}
+]
