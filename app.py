@@ -7,7 +7,23 @@ import os
 ROOT = Path(__file__).resolve().parent
 STORE = ROOT / '.local' / 'drafts.json'
 PRODUCTS = json.loads((ROOT / 'data/catalogo.json').read_text(encoding="utf-8"))
-FIELDS = {'sku', 'stock', 'price', 'ean', 'height', 'width', 'length', 'shipping_weight'}
+FIELDS = {'sku', 'stock', 'price', 'ean', 'height', 'width', 'length', 'shipping_weight', 'title', 'description'}
+
+REQUIRED = {
+    'title': 'Título', 'description': 'Descrição', 'sku': 'SKU',
+    'stock': 'Estoque maior que zero', 'price': 'Preço de venda',
+    'height': 'Altura', 'width': 'Largura', 'length': 'Comprimento',
+    'shipping_weight': 'Peso para envio',
+}
+
+def preparation(draft):
+    missing = [label for key, label in REQUIRED.items()
+               if not draft.get(key, '').strip() or (key == 'stock' and float(draft[key]) <= 0)]
+    return {'missing': missing, 'completed': len(REQUIRED) - len(missing),
+            'total': len(REQUIRED),
+            'status': 'Cadastro básico completo' if not missing else 'Dados pendentes',
+            'publication_blockers': ['Fotos individuais', 'Categoria e atributos do canal',
+                                     'Validação de GTIN ou isenção', 'Conexão com Mercado Livre']}
 
 class Handler(BaseHTTPRequestHandler):
     def respond(self, status, payload, content_type='application/json; charset=utf-8'):
@@ -23,7 +39,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/api/products':
             drafts = json.loads(STORE.read_text(encoding="utf-8")) if STORE.exists() else {}
-            return self.respond(200, [{**p, 'draft': drafts.get(p['id'], {})} for p in PRODUCTS])
+            return self.respond(200, [{**p, 'draft': drafts.get(p['id'], {}), 'preparation': preparation(drafts.get(p['id'], {}))} for p in PRODUCTS])
         if self.path == '/':
             return self.respond(200, (ROOT / 'static/index.html').read_text(encoding="utf-8"), 'text/html; charset=utf-8')
         self.respond(404, {'error': 'Não encontrado'})
@@ -37,7 +53,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond(403, {'error': 'Origem inválida'})
         try:
             length = int(self.headers.get('Content-Length', 0))
-            if length < 1 or length > 16000:
+            if length < 1 or length > 64000:
                 raise ValueError('Tamanho inválido')
             body = json.loads(self.rfile.read(length))
             if body.get('id') not in {p['id'] for p in PRODUCTS}:
@@ -46,9 +62,9 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(draft, dict) or set(draft) - FIELDS:
                 raise ValueError('Campos inválidos')
             for key, value in draft.items():
-                if not isinstance(value, str) or len(value) > 100:
+                if not isinstance(value, str) or len(value) > (5000 if key == 'description' else 150 if key == 'title' else 100):
                     raise ValueError('Valor inválido')
-                if value and key not in {'sku', 'ean'}:
+                if value and key not in {'sku', 'ean', 'title', 'description'}:
                     import math
                     number = float(value)
                     if not math.isfinite(number) or number < 0 or (key != 'stock' and number == 0):
@@ -66,4 +82,5 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(400, {'error': 'Revise os campos: estoque inteiro e medidas/preço positivos.'})
 
 if __name__ == '__main__':
+    print(f"Central de cafés: http://127.0.0.1:{os.environ.get('PORT', '8000')}/ — Ctrl+C para encerrar", flush=True)
     HTTPServer(('127.0.0.1', int(os.environ.get('PORT', '8000'))), Handler).serve_forever()
