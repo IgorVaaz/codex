@@ -6,7 +6,7 @@ import os
 
 ROOT = Path(__file__).resolve().parent
 STORE = ROOT / '.local' / 'drafts.json'
-PRODUCTS = json.loads((ROOT / 'data/catalogo.json').read_text())
+PRODUCTS = json.loads((ROOT / 'data/catalogo.json').read_text(encoding="utf-8"))
 FIELDS = {'sku', 'stock', 'price', 'ean', 'height', 'width', 'length', 'shipping_weight'}
 
 class Handler(BaseHTTPRequestHandler):
@@ -22,10 +22,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/products':
-            drafts = json.loads(STORE.read_text()) if STORE.exists() else {}
+            drafts = json.loads(STORE.read_text(encoding="utf-8")) if STORE.exists() else {}
             return self.respond(200, [{**p, 'draft': drafts.get(p['id'], {})} for p in PRODUCTS])
         if self.path == '/':
-            return self.respond(200, (ROOT / 'static/index.html').read_text(), 'text/html; charset=utf-8')
+            return self.respond(200, (ROOT / 'static/index.html').read_text(encoding="utf-8"), 'text/html; charset=utf-8')
         self.respond(404, {'error': 'Não encontrado'})
 
     def do_POST(self):
@@ -55,11 +55,11 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError('Valor numérico inválido')
                     if key == 'stock' and not number.is_integer():
                         raise ValueError('Estoque deve ser inteiro')
-            drafts = json.loads(STORE.read_text()) if STORE.exists() else {}
+            drafts = json.loads(STORE.read_text(encoding="utf-8")) if STORE.exists() else {}
             drafts[body['id']] = draft
             STORE.parent.mkdir(exist_ok=True)
             temp = STORE.with_suffix('.tmp')
-            temp.write_text(json.dumps(drafts, ensure_ascii=False, indent=2))
+            temp.write_text(json.dumps(drafts, ensure_ascii=False, indent=2), encoding="utf-8")
             temp.replace(STORE)
             self.respond(200, {'saved': True})
         except (ValueError, KeyError, TypeError):
